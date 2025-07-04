@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { 
   ChatRequest, ChatResponse, ConversationResponse, 
-  PDFUploadResponse, PDFInfo, DeletePDFRequest, DeletePDFResponse 
+  PDFUploadResponse, PDFInfo, DeletePDFResponse 
 } from '../types/chat';
 
 // PRODUCTION DEPLOYMENT CONFIGURATION:

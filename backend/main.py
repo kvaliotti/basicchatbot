@@ -118,12 +118,13 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
                     response=ai_response
                 )
         
-        # Get AI response using expert consultants (with optional PDF context)
+        # Get AI response using appropriate mode (with optional PDF context)
         openai_service = OpenAIService(request.api_key)
         ai_response = openai_service.get_expert_response(
             request.message, 
             conversation_history,
-            pdf_context=pdf_context
+            pdf_context=pdf_context,
+            chat_mode=request.chat_mode.value if request.chat_mode else "general"
         )
         
         # Save AI response
