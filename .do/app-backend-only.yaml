@@ -1,0 +1,16 @@
+name: ai-expert-chatapp-backend
+services:
+- name: backend
+  source_dir: backend
+  github:
+    repo: kvaliotti/basicchatbot
+    branch: main
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  envs:
+  - key: DATABASE_URL
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: ENVIRONMENT
+    scope: RUN_AND_BUILD_TIME
+    value: production 
