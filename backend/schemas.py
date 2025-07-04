@@ -6,6 +6,7 @@ class ChatRequest(BaseModel):
     message: str
     api_key: str
     conversation_id: Optional[int] = None
+    pdf_filename: Optional[str] = None  # For RAG with specific PDF
 
 class ChatResponse(BaseModel):
     conversation_id: int
@@ -20,4 +21,24 @@ class MessageResponse(BaseModel):
 class ConversationResponse(BaseModel):
     id: int
     created_at: datetime
-    messages: List[MessageResponse] 
+    messages: List[MessageResponse]
+
+# New schemas for PDF/RAG functionality
+class PDFUploadResponse(BaseModel):
+    filename: str
+    chunks_count: int
+    status: str
+    message: str
+
+class PDFInfoResponse(BaseModel):
+    filename: str
+    chunks_count: int
+    total_length: int
+    file_size: int
+
+class DeletePDFRequest(BaseModel):
+    filename: str
+
+class DeletePDFResponse(BaseModel):
+    success: bool
+    message: str 

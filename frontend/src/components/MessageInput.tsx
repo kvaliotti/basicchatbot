@@ -3,9 +3,14 @@ import React, { useState } from 'react';
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
   disabled: boolean;
+  placeholder?: string;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, disabled }) => {
+const MessageInput: React.FC<MessageInputProps> = ({ 
+  onSendMessage, 
+  disabled, 
+  placeholder = "Ask the expert consultants anything..." 
+}) => {
   const [message, setMessage] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -29,7 +34,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, disabled }) 
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyPress={handleKeyPress}
-        placeholder="Ask the expert consultants anything..."
+        placeholder={placeholder}
         disabled={disabled}
         className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
         rows={1}
