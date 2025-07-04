@@ -63,7 +63,19 @@ def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
             db.commit()
             db.refresh(conversation)
         
-        # Save user message
+        # Get conversation history BEFORE adding the new user message
+        # This ensures we get all previous messages for context
+        existing_messages = db.query(Message).filter(
+            Message.conversation_id == conversation.id
+        ).order_by(Message.created_at).all()
+        
+        # Convert to OpenAI format
+        conversation_history = [
+            {"role": msg.role, "content": msg.content}
+            for msg in existing_messages
+        ]
+        
+        # Save user message AFTER getting history
         user_message = Message(
             conversation_id=conversation.id,
             role="user",
@@ -71,21 +83,6 @@ def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
         )
         db.add(user_message)
         db.commit()
-        
-        # Get conversation history for context
-        conversation_history = []
-        if conversation.messages:
-            # Get all messages except the one we just added
-            existing_messages = db.query(Message).filter(
-                Message.conversation_id == conversation.id,
-                Message.id != user_message.id
-            ).order_by(Message.created_at).all()
-            
-            # Convert to OpenAI format
-            conversation_history = [
-                {"role": msg.role, "content": msg.content}
-                for msg in existing_messages
-            ]
         
         # Get AI response with conversation context
         openai_service = OpenAIService(request.api_key)
