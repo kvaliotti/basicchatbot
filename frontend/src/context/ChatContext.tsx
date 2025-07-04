@@ -1,9 +1,15 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Message } from '../types/chat';
+
+// Local message type for UI state management
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
 
 interface ChatContextType {
-  messages: Message[];
-  addMessage: (message: Message) => void;
+  messages: ChatMessage[];
+  addMessage: (message: ChatMessage) => void;
   clearMessages: () => void;
   currentConversationId: number | null;
   setCurrentConversationId: (id: number | null) => void;
@@ -24,10 +30,10 @@ interface ChatProviderProps {
 }
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
 
-  const addMessage = (message: Message) => {
+  const addMessage = (message: ChatMessage) => {
     setMessages(prev => [...prev, message]);
   };
 

@@ -1,8 +1,14 @@
 import React from 'react';
-import { Message } from '../types/chat';
+
+// Local message type for UI (matches ChatContext)
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
 
 interface MessageListProps {
-  messages: Message[];
+  messages: ChatMessage[];
   isLoading: boolean;
 }
 
@@ -43,7 +49,8 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading }) => {
     return (
       <div className="text-center text-gray-500 py-8">
         <p>Start a conversation with our AI expert consultants!</p>
-        <p className="text-sm mt-2">Ask any business question and get insights from McKinsey, BCG, and Bain perspectives.</p>
+        <p className="text-sm mt-2">Get insights from McKinsey, BCG, and Bain consultant perspectives.</p>
+        <p className="text-sm mt-1">Upload a PDF to provide document context for more specific analysis!</p>
       </div>
     );
   }

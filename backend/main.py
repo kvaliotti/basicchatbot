@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
@@ -7,13 +7,20 @@ from dotenv import load_dotenv
 
 from database import SessionLocal, engine, Base
 from models import Conversation, Message
-from schemas import ChatRequest, ChatResponse, ConversationResponse, MessageResponse
+from schemas import (
+    ChatRequest, ChatResponse, ConversationResponse, MessageResponse,
+    PDFUploadResponse, PDFInfoResponse, DeletePDFRequest, DeletePDFResponse
+)
 from openai_service import OpenAIService
+from rag_service import RAGService
 
 load_dotenv()
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Initialize RAG service
+rag_service = RAGService()
 
 app = FastAPI(title="Chatapp API", version="1.0.0")
 
@@ -47,9 +54,9 @@ def read_root():
     return {"message": "Chatapp API is running"}
 
 @app.post("/api/chat", response_model=ChatResponse)
-def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
+async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
     """
-    Send a message to the AI and get a response
+    Send a message to the AI and get a response (with optional RAG)
     """
     try:
         # Get or create conversation
@@ -84,9 +91,40 @@ def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
         db.add(user_message)
         db.commit()
         
-        # Get AI response with conversation context
+        # Get PDF context if PDF is selected
+        pdf_context = None
+        if request.pdf_filename:
+            pdf_context = rag_service.get_relevant_context(
+                request.pdf_filename, 
+                request.message, 
+                k=3
+            )
+            
+            # If no relevant context found, inform user
+            if not pdf_context:
+                ai_response = f"I couldn't find relevant information about '{request.message}' in the uploaded PDF '{request.pdf_filename}'. Please make sure the PDF is uploaded and contains relevant content, or switch to general expert chat mode."
+                
+                # Save AI response and return early
+                ai_message = Message(
+                    conversation_id=conversation.id,
+                    role="assistant",
+                    content=ai_response
+                )
+                db.add(ai_message)
+                db.commit()
+                
+                return ChatResponse(
+                    conversation_id=conversation.id,
+                    response=ai_response
+                )
+        
+        # Get AI response using expert consultants (with optional PDF context)
         openai_service = OpenAIService(request.api_key)
-        ai_response = openai_service.get_expert_response(request.message, conversation_history)
+        ai_response = openai_service.get_expert_response(
+            request.message, 
+            conversation_history,
+            pdf_context=pdf_context
+        )
         
         # Save AI response
         ai_message = Message(
@@ -102,6 +140,55 @@ def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
             response=ai_response
         )
     
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/upload-pdf", response_model=PDFUploadResponse)
+async def upload_pdf(file: UploadFile = File(...)):
+    """
+    Upload and process a PDF file for RAG
+    """
+    try:
+        # Validate file type
+        if not file.filename.lower().endswith('.pdf'):
+            raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+        
+        # Process PDF using RAG service
+        result = await rag_service.process_pdf(file)
+        
+        return PDFUploadResponse(**result)
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
+
+@app.get("/api/pdfs", response_model=List[PDFInfoResponse])
+async def get_uploaded_pdfs():
+    """
+    Get list of uploaded PDFs
+    """
+    try:
+        files = rag_service.get_uploaded_files()
+        return [PDFInfoResponse(**file_info) for file_info in files]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/pdfs", response_model=DeletePDFResponse)
+async def delete_pdf(request: DeletePDFRequest):
+    """
+    Delete an uploaded PDF and its vector database
+    """
+    try:
+        success = rag_service.delete_file(request.filename)
+        if success:
+            return DeletePDFResponse(
+                success=True,
+                message=f"Successfully deleted {request.filename}"
+            )
+        else:
+            return DeletePDFResponse(
+                success=False,
+                message=f"File {request.filename} not found"
+            )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
