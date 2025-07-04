@@ -1,0 +1,42 @@
+graph TB
+    subgraph "Frontend (React)"
+        A[React App] --> B[API Key Input]
+        A --> C[Chat Interface]
+        C --> D[Message List]
+        C --> E[Message Input]
+    end
+    
+    subgraph "Backend (FastAPI)"
+        F[FastAPI Server] --> G[Chat Routes]
+        G --> H[OpenAI Integration]
+        G --> I[Message Handler]
+        F --> J[Database Layer]
+    end
+    
+    subgraph "Database (PostgreSQL)"
+        K[PostgreSQL DB]
+        L[conversations table]
+        M[messages table]
+        N[users table]
+    end
+    
+    subgraph "External APIs"
+        O[OpenAI API]
+    end
+    
+    A --> |HTTP Requests| F
+    F --> |SQL Queries| K
+    H --> |API Calls| O
+    J --> L
+    J --> M
+    J --> N
+    
+    classDef frontend fill:#e1f5fe
+    classDef backend fill:#f3e5f5
+    classDef database fill:#e8f5e8
+    classDef external fill:#fff3e0
+    
+    class A,B,C,D,E frontend
+    class F,G,H,I,J backend
+    class K,L,M,N database
+    class O external 
