@@ -3,11 +3,13 @@ export interface ChatRequest {
   api_key: string;
   conversation_id?: number;
   pdf_filename?: string;  // For RAG with specific PDF
+  chat_mode?: 'general' | 'research_reviewer';  // NEW: Chat mode selection
 }
 
 export interface ChatResponse {
   conversation_id: number;
   response: string;
+  recommendations?: string[];  // NEW: Extracted recommendations from LLM
 }
 
 export interface Message {
@@ -21,6 +23,24 @@ export interface ConversationResponse {
   id: number;
   created_at: string;
   messages: Message[];
+}
+
+// NEW: Chat mode types
+export type ChatMode = 'general' | 'research_reviewer';
+
+export interface ChatModeInfo {
+  id: ChatMode;
+  label: string;
+  description: string;
+  icon: string;
+}
+
+// NEW: Recommendation types
+export interface Recommendation {
+  id: string;
+  content: string;
+  timestamp: Date;
+  sourceMessage?: string;  // The message that generated this recommendation
 }
 
 // New types for PDF/RAG functionality

@@ -75,7 +75,9 @@ class RAGService:
             return []
         
         vector_db = self.vector_databases[filename]
-        relevant_texts = vector_db.search_by_text(query, k=k, return_as_text=True)
+        # Get search results as text-score tuples, then extract just the text
+        search_results = vector_db.search_by_text(query, k=k, return_as_text=False)
+        relevant_texts = [result[0] for result in search_results] if search_results else []
         return relevant_texts
     
     def get_uploaded_files(self) -> List[Dict[str, Any]]:

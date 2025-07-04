@@ -5,11 +5,43 @@ class OpenAIService:
     def __init__(self, api_key: str):
         self.client = openai.OpenAI(api_key=api_key)
         
-    def get_expert_response(self, user_message: str, conversation_history: List[Dict[str, str]] = None, pdf_context: Optional[List[str]] = None) -> str:
+    def get_expert_response(self, user_message: str, conversation_history: Optional[List[Dict[str, str]]] = None, pdf_context: Optional[List[str]] = None, chat_mode: str = "general") -> str:
         """
-        Get a response from the AI using the expert consultant system prompt with conversation history and optional PDF context
+        Get a response from the AI using different system prompts based on chat mode
         """
-        # Build the base expert consultant prompt
+        # Build the appropriate system prompt based on chat mode
+        if chat_mode == "research_reviewer":
+            system_prompt = self._get_research_reviewer_prompt(pdf_context)
+        else:
+            system_prompt = self._get_expert_consultant_prompt(pdf_context)
+        
+        try:
+            # Build messages array with conversation history
+            messages = [{"role": "system", "content": system_prompt}]
+            
+            # Add conversation history if provided
+            if conversation_history:
+                messages.extend(conversation_history)
+            
+            # Add current user message
+            messages.append({"role": "user", "content": user_message})
+            
+            response = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                max_tokens=2500,
+                temperature=0.7
+            )
+            
+            return response.choices[0].message.content
+            
+        except Exception as e:
+            raise Exception(f"OpenAI API error: {str(e)}")
+    
+    def _get_expert_consultant_prompt(self, pdf_context: Optional[List[str]] = None) -> str:
+        """
+        Get the expert consultant system prompt (original functionality)
+        """
         base_prompt = """You are a mixture of three expert consultants: McKinsey, BCG, and Bain. 
         When responding to user queries, you should:
         
@@ -40,7 +72,7 @@ class OpenAIService:
         # Add PDF context if provided
         if pdf_context and len(pdf_context) > 0:
             context_text = "\n\n".join([f"Document Section {i+1}:\n{ctx}" for i, ctx in enumerate(pdf_context)])
-            system_prompt = f"""{base_prompt}
+            return f"""{base_prompt}
         
         **IMPORTANT**: You have access to relevant sections from a PDF document that may be helpful for answering the user's question. When the document context is relevant, the consultants should reference and analyze this information in their discussion.
         
@@ -52,28 +84,58 @@ class OpenAIService:
         - If the question can be answered using the document, prioritize that information
         - If the document doesn't contain relevant information for the question, say that you don't know because the document does not containt information about the request (unless there is no document sent, which can be the case; then, simply use general knowledge)
         - Always maintain the consultant discussion format regardless of whether document context is used"""
-        else:
-            system_prompt = base_prompt
         
-        try:
-            # Build messages array with conversation history
-            messages = [{"role": "system", "content": system_prompt}]
-            
-            # Add conversation history if provided
-            if conversation_history:
-                messages.extend(conversation_history)
-            
-            # Add current user message
-            messages.append({"role": "user", "content": user_message})
-            
-            response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=messages,
-                max_tokens=2500,
-                temperature=0.7
-            )
-            
-            return response.choices[0].message.content
-            
-        except Exception as e:
-            raise Exception(f"OpenAI API error: {str(e)}") 
+        return base_prompt
+    
+    def _get_research_reviewer_prompt(self, pdf_context: Optional[List[str]] = None) -> str:
+        """
+        Get the research article reviewer system prompt (new functionality)
+        """
+        base_prompt = """You are an expert research article reviewer and academic advisor. Your role is to:
+
+        1. **Analyze and Extract Key Information**: Carefully review the provided content (research articles, papers, or text) and identify the most important findings, methodologies, and insights.
+
+        2. **Provide Clear Summaries**: Present key information in a structured, easy-to-understand format.
+
+        3. **Generate Next-Step Recommendations**: Always conclude your analysis with specific, actionable recommendations for future research directions, further investigation, or next steps.
+
+        **Your Response Format:**
+
+        **Key Findings:**
+        [Summarize the most important insights, findings, or information from the content]
+
+        **Methodology/Approach Analysis:**
+        [If applicable, evaluate the research methods, approaches, or techniques used]
+
+        **Critical Assessment:**
+        [Provide objective evaluation of strengths, limitations, or areas for improvement]
+
+        **Next Steps & Recommendations:**
+        [Provide 2-4 specific, actionable recommendations for:]
+        - Future research directions
+        - Areas that need further investigation
+        - Potential improvements or extensions
+        - Related topics worth exploring
+        - Practical applications or implementations
+
+        **Additional Considerations:**
+        [Any other relevant insights, connections to broader research areas, or important context]
+
+        Make your recommendations specific, actionable, and research-oriented. Focus on what could be done next to advance knowledge in this area."""
+        
+        # Add PDF context if provided
+        if pdf_context and len(pdf_context) > 0:
+            context_text = "\n\n".join([f"Document Section {i+1}:\n{ctx}" for i, ctx in enumerate(pdf_context)])
+            return f"""{base_prompt}
+        
+        **Document Content to Review:**
+        {context_text}
+        
+        **Instructions for Document Review:**
+        - Focus your analysis on the provided document content
+        - Extract key findings and methodologies from the document
+        - Base your recommendations on what you observe in the document
+        - If the document doesn't contain sufficient information for analysis, clearly state what additional information would be needed
+        - Always provide next-step recommendations even if based on limited information"""
+        
+        return base_prompt 

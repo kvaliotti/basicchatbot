@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { ChatMode, Recommendation } from '../types/chat';
 
 // Local message type for UI state management
 interface ChatMessage {
@@ -13,6 +14,13 @@ interface ChatContextType {
   clearMessages: () => void;
   currentConversationId: number | null;
   setCurrentConversationId: (id: number | null) => void;
+  // NEW: Chat mode functionality
+  chatMode: ChatMode;
+  setChatMode: (mode: ChatMode) => void;
+  // NEW: Recommendations functionality
+  recommendations: Recommendation[];
+  addRecommendations: (recommendations: string[], sourceMessage?: string) => void;
+  clearRecommendations: () => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -32,6 +40,8 @@ interface ChatProviderProps {
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<number | null>(null);
+  const [chatMode, setChatMode] = useState<ChatMode>('general');
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
 
   const addMessage = (message: ChatMessage) => {
     setMessages(prev => [...prev, message]);
@@ -41,12 +51,37 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     setMessages([]);
   };
 
-  // Clear messages when starting a new conversation
+  // NEW: Add recommendations from LLM responses
+  const addRecommendations = (newRecommendations: string[], sourceMessage?: string) => {
+    const recommendationObjects: Recommendation[] = newRecommendations.map(rec => ({
+      id: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      content: rec,
+      timestamp: new Date(),
+      sourceMessage
+    }));
+    
+    setRecommendations(prev => [...prev, ...recommendationObjects]);
+  };
+
+  // NEW: Clear recommendations
+  const clearRecommendations = () => {
+    setRecommendations([]);
+  };
+
+  // Clear messages and recommendations when starting a new conversation
   const handleSetCurrentConversationId = (id: number | null) => {
     if (id === null) {
       clearMessages();
+      clearRecommendations();
     }
     setCurrentConversationId(id);
+  };
+
+  // NEW: Handle chat mode changes
+  const handleSetChatMode = (mode: ChatMode) => {
+    setChatMode(mode);
+    // Clear conversation when switching modes
+    handleSetCurrentConversationId(null);
   };
 
   return (
@@ -57,6 +92,11 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         clearMessages,
         currentConversationId,
         setCurrentConversationId: handleSetCurrentConversationId,
+        chatMode,
+        setChatMode: handleSetChatMode,
+        recommendations,
+        addRecommendations,
+        clearRecommendations,
       }}
     >
       {children}
