@@ -91,39 +91,19 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
         db.add(user_message)
         db.commit()
         
-        # Debug: Log request parameters
-        print(f"DEBUG MAIN: Message: '{request.message}'")
-        print(f"DEBUG MAIN: PDF filename: {request.pdf_filename}")
-        print(f"DEBUG MAIN: Chat mode: {request.chat_mode}")
-        print(f"DEBUG MAIN: Chat mode type: {type(request.chat_mode)}")
+        # Process chat mode - ensure proper enum handling
+        chat_mode_str = request.chat_mode.value if hasattr(request.chat_mode, 'value') else str(request.chat_mode) if request.chat_mode else "general"
         
         # Get PDF context if PDF is selected
         pdf_context = None
         if request.pdf_filename:
-            print(f"DEBUG MAIN: Starting RAG retrieval for PDF: {request.pdf_filename}")
             pdf_context = rag_service.get_relevant_context(
                 request.pdf_filename, 
                 request.message, 
                 k=3
             )
-            
-            # Debug: Log context retrieval
-            print(f"DEBUG MAIN: Retrieved {len(pdf_context) if pdf_context else 0} context chunks for '{request.message}'")
-            if pdf_context:
-                print(f"DEBUG MAIN: First chunk preview: {pdf_context[0][:100]}...")
-            else:
-                print(f"DEBUG MAIN: NO PDF CONTEXT RETRIEVED!")
-            
-            # Note: Always proceed to OpenAI call, even if no specific context found
-            # The LLM can still provide general guidance about the document
-        else:
-            print(f"DEBUG MAIN: No PDF filename provided - skipping RAG")
         
         # Get AI response using appropriate mode (with optional PDF context)
-        # Fix: ChatMode inherits from str, so we can use it directly
-        chat_mode_str = str(request.chat_mode) if request.chat_mode else "general"
-        print(f"DEBUG MAIN: Using chat mode: {chat_mode_str}")
-        
         openai_service = OpenAIService(request.api_key)
         ai_response = openai_service.get_expert_response(
             request.message, 
