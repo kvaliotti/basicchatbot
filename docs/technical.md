@@ -72,7 +72,7 @@ from aimakerspace.openai_utils.prompts import SystemRolePrompt, UserRolePrompt
 ### OpenAI Integration
 
 #### Models Used
-- **Chat**: gpt-3.5-turbo or gpt-4 (configurable)
+- **Chat**: gpt-4.1
 - **Embeddings**: text-embedding-3-small
 - **API Key**: User-provided via frontend
 
