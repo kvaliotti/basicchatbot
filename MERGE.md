@@ -12,6 +12,7 @@
 - **Enhanced UI Layout**: Full-screen layout with collapsible sidebar for optimal user experience
 - **Mode-Aware Interface**: Dynamic titles, placeholders, and behaviors based on selected mode
 - **RAG System Fix**: Fixed critical bug that was preventing PDF context from being passed to both modes
+- **Research Reviewer Mode Fix**: Fixed backend bug where chat_mode.value was causing Research Reviewer mode to fail with RAG
 
 ### 📁 Files Modified
 - `frontend/src/types/chat.ts` - Added ChatMode and Recommendation types
@@ -36,6 +37,7 @@
 - ✅ Conversation reset on mode switching
 - ✅ Backend API handles new chat_mode parameter
 - ✅ RAG system properly passes PDF context to OpenAI for both modes
+- ✅ Research Reviewer mode now correctly processes chat_mode parameter (fixed .value bug)
 
 ### 🔄 Merge Options
 

@@ -9,6 +9,12 @@ class OpenAIService:
         """
         Get a response from the AI using different system prompts based on chat mode
         """
+        # Debug logging
+        print(f"DEBUG OpenAI Service - Mode: {chat_mode}")
+        print(f"DEBUG OpenAI Service - PDF Context: {len(pdf_context) if pdf_context else 0} chunks")
+        if pdf_context:
+            print(f"DEBUG OpenAI Service - First chunk preview: {pdf_context[0][:100]}...")
+        
         # Build the appropriate system prompt based on chat mode
         if chat_mode == "research_reviewer":
             system_prompt = self._get_research_reviewer_prompt(pdf_context)
@@ -91,6 +97,13 @@ class OpenAIService:
         """
         Get the research article reviewer system prompt (new functionality)
         """
+        # Debug logging for research reviewer
+        print(f"DEBUG Research Reviewer - PDF Context: {len(pdf_context) if pdf_context else 0} chunks")
+        if pdf_context:
+            print(f"DEBUG Research Reviewer - Context will be included in prompt")
+        else:
+            print(f"DEBUG Research Reviewer - NO PDF CONTEXT - will use base prompt only")
+        
         base_prompt = """You are an expert research article reviewer and academic advisor. Your role is to:
 
         1. **Analyze and Extract Key Information**: Carefully review the provided content (research articles, papers, or text) and identify the most important findings, methodologies, and insights.
