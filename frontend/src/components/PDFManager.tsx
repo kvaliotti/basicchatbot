@@ -17,14 +17,21 @@ export const PDFManager: React.FC<PDFManagerProps> = ({ selectedPDF, onPDFSelect
     loadPDFs();
   }, []);
 
-  const loadPDFs = async () => {
+  const loadPDFs = async (retries = 3): Promise<PDFInfo[]> => {
     setLoading(true);
     try {
       const uploadedPDFs = await chatService.getUploadedPDFs();
       setPdfs(uploadedPDFs);
+      return uploadedPDFs;
     } catch (error) {
       console.error('Error loading PDFs:', error);
+      if (retries > 0) {
+        // Wait a bit and retry
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return loadPDFs(retries - 1);
+      }
       setUploadMessage('Error loading PDFs');
+      return [];
     } finally {
       setLoading(false);
     }
@@ -45,10 +52,21 @@ export const PDFManager: React.FC<PDFManagerProps> = ({ selectedPDF, onPDFSelect
     try {
       const result: PDFUploadResponse = await chatService.uploadPDF(file);
       setUploadMessage(`✅ ${result.message}`);
-      await loadPDFs(); // Refresh the list
       
-      // Auto-select the newly uploaded PDF
-      onPDFSelect(result.filename);
+      // Add a small delay to ensure backend has committed the PDF
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const updatedPDFs = await loadPDFs(); // Refresh the list
+      
+      // Validate that the PDF is in the list before selecting it
+      const uploadedPDF = updatedPDFs.find(pdf => pdf.filename === result.filename);
+      
+      if (uploadedPDF) {
+        // Auto-select the newly uploaded PDF
+        onPDFSelect(result.filename);
+      } else {
+        setUploadMessage(`⚠️ PDF uploaded but not found in list. Please refresh.`);
+      }
     } catch (error: any) {
       console.error('Error uploading PDF:', error);
       setUploadMessage(`❌ Upload failed: ${error.response?.data?.detail || error.message}`);
