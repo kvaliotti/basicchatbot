@@ -100,23 +100,13 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
                 k=3
             )
             
-            # If no relevant context found, inform user
-            if not pdf_context:
-                ai_response = f"I couldn't find relevant information about '{request.message}' in the uploaded PDF '{request.pdf_filename}'. Please make sure the PDF is uploaded and contains relevant content, or switch to general expert chat mode."
-                
-                # Save AI response and return early
-                ai_message = Message(
-                    conversation_id=conversation.id,
-                    role="assistant",
-                    content=ai_response
-                )
-                db.add(ai_message)
-                db.commit()
-                
-                return ChatResponse(
-                    conversation_id=conversation.id,
-                    response=ai_response
-                )
+            # Debug: Log context retrieval
+            print(f"DEBUG: Retrieved {len(pdf_context) if pdf_context else 0} context chunks for '{request.message}'")
+            if pdf_context:
+                print(f"DEBUG: First chunk preview: {pdf_context[0][:100]}...")
+            
+            # Note: Always proceed to OpenAI call, even if no specific context found
+            # The LLM can still provide general guidance about the document
         
         # Get AI response using appropriate mode (with optional PDF context)
         openai_service = OpenAIService(request.api_key)

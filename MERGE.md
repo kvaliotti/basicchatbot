@@ -11,6 +11,7 @@
 - **Recommendations Sidebar**: Automatic extraction and display of next-step recommendations
 - **Enhanced UI Layout**: Full-screen layout with collapsible sidebar for optimal user experience
 - **Mode-Aware Interface**: Dynamic titles, placeholders, and behaviors based on selected mode
+- **RAG System Fix**: Fixed critical bug that was preventing PDF context from being passed to both modes
 
 ### 📁 Files Modified
 - `frontend/src/types/chat.ts` - Added ChatMode and Recommendation types
@@ -30,10 +31,11 @@
 - ✅ General mode maintains existing expert consultant behavior  
 - ✅ Research reviewer mode provides structured analysis with recommendations
 - ✅ Recommendations extraction and sidebar display
-- ✅ PDF integration works with both modes
+- ✅ PDF integration works with both modes (RAG functionality restored)
 - ✅ Responsive layout and UI adaptation
 - ✅ Conversation reset on mode switching
 - ✅ Backend API handles new chat_mode parameter
+- ✅ RAG system properly passes PDF context to OpenAI for both modes
 
 ### 🔄 Merge Options
 
