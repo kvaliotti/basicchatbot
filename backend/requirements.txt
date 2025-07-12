@@ -1,5 +1,6 @@
 fastapi==0.104.1
 uvicorn==0.24.0
+gunicorn==21.2.0
 pydantic==2.5.0
 python-dotenv==1.0.0
 sqlalchemy==2.0.23
@@ -20,6 +21,7 @@ langchain-core>=0.2.0
 langchain-openai>=0.1.0
 langchain-community>=0.2.0
 langchain-experimental>=0.0.50
+langchain-tavily>=0.1.0
 
 # Research tool dependencies
 tavily-python>=0.3.0

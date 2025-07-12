@@ -1,80 +1,74 @@
-# Branch: feature/add-mode-dropdown-and-recommendations
+# Merge Instructions for feature/langgraph-agent-3-tools
 
-## Summary
-Added multi-mode chat functionality and a separate deep research agent interface to the AI chatbot application.
+## Overview
+This branch contains the implementation of a LangGraph-based healthcare compliance research agent with deployment fixes.
 
 ## Changes Made
 
-### Main Features
-1. **Multi-Mode Chat System**
-   - Added mode selector dropdown (General vs Research Reviewer)
-   - Implemented different system prompts for each mode
-   - Added recommendations sidebar for research reviewer mode
-   - Fixed chat mode switching and RAG integration
+### Core Implementation
+- **LangGraph Agent**: Complete StateGraph implementation with Agent → Actions → Back to Agent flow
+- **Six Research Tools**: Query enhancer, TavilySearch, Wikipedia, PubMed, PythonREPL, PDF parser
+- **Backend Integration**: `/api/deep-research` endpoint with proper error handling
+- **Frontend Components**: DeepResearchAgent.tsx with ResearchSteps.tsx sidebar
+- **Specialized Configuration**: Healthcare compliance analyst persona with structured responses
 
-2. **Deep Research Agent** (NEW)
-   - Created separate interface at `/deep-research-agent` URL
-   - Simple chat interface without mode selector or sidebar
-   - Dedicated backend endpoint for deep research queries
-   - Independent API key management
+### Deployment Fixes (Latest)
+- **Added gunicorn**: Fixed missing gunicorn dependency in requirements.txt
+- **Added langchain-tavily**: Added required langchain-tavily package for TavilySearch
+- **Port Configuration**: Updated main.py to use PORT environment variable
+- **Procfile Update**: Fixed Procfile to use $PORT instead of hardcoded 8080
 
-### Frontend Changes
-- `src/components/ModeSelector.tsx` - Mode selection dropdown
-- `src/components/RecommendationsSidebar.tsx` - Research recommendations display
-- `src/components/DeepResearchAgent.tsx` - New simple chat interface
-- `src/context/ChatContext.tsx` - Enhanced with mode and recommendations state
-- `src/App.tsx` - Added React Router for multiple routes
-- `src/components/ChatInterface.tsx` - Updated for mode switching
-- `src/components/PDFManager.tsx` - Fixed PDF upload timing issues
-
-### Backend Changes
-- `backend/schemas.py` - Added ChatMode enum and deep research schemas
-- `backend/main.py` - Enhanced chat endpoint + new deep research endpoint
-- `backend/openai_service.py` - Added research reviewer prompt system
-
-### Dependencies Added
-- `react-router-dom` and `@types/react-router-dom` for routing
-
-## Features Working
-✅ Multi-mode chat (General & Research Reviewer)
-✅ PDF upload and RAG functionality for both modes
-✅ Mode switching with conversation clearing
-✅ Recommendations extraction and display
-✅ Deep research agent at `/deep-research-agent`
-✅ Independent API key management for deep research agent
+### Files Modified
+- `backend/requirements.txt`: Added gunicorn==21.2.0 and langchain-tavily>=0.1.0
+- `backend/main.py`: Updated port configuration to use environment variable
+- `backend/Procfile`: Updated to use $PORT environment variable
+- `backend/deepresearchagent.py`: Complete LangGraph agent implementation
+- `backend/schemas.py`: Added DeepResearchRequest/Response models
+- `frontend/src/components/DeepResearchAgent.tsx`: Main component
+- `frontend/src/components/ResearchSteps.tsx`: Research tracking sidebar
+- `frontend/src/App.tsx`: Added routing for deep research agent
 
 ## How to Merge
 
-### Option 1: GitHub PR (Recommended)
-1. Push the branch to GitHub:
-   ```bash
-   git push origin feature/add-mode-dropdown-and-recommendations
-   ```
-2. Create a Pull Request on GitHub
-3. Review the changes and merge when ready
-
-### Option 2: GitHub CLI
-1. Install GitHub CLI if not already installed
-2. Create and merge PR:
-   ```bash
-   gh pr create --title "Add Multi-Mode Chat and Deep Research Agent" --body "Added mode selector, recommendations sidebar, and separate deep research agent interface"
-   gh pr merge --merge  # or --squash or --rebase
-   ```
-
-### Option 3: Direct Merge
+### Option 1: GitHub CLI
 ```bash
-git checkout main
-git merge feature/add-mode-dropdown-and-recommendations
-git push origin main
+# Push current changes
+git add .
+git commit -m "Fix deployment issues: add gunicorn, fix port configuration"
+git push origin feature/langgraph-agent-3-tools
+
+# Create and merge PR
+gh pr create --title "Healthcare Compliance Research Agent with Deployment Fixes" --body "Implements LangGraph agent with 6 research tools and fixes deployment issues with gunicorn and port configuration"
+gh pr merge --squash --delete-branch
 ```
 
-## URLs After Merge
-- Main app: `https://your-domain.com/`
-- Deep research agent: `https://your-domain.com/deep-research-agent`
+### Option 2: GitHub Web Interface
+1. **Push changes**: `git push origin feature/langgraph-agent-3-tools`
+2. **Create PR**: Go to GitHub → New Pull Request
+3. **Title**: "Healthcare Compliance Research Agent with Deployment Fixes"
+4. **Description**: 
+   ```
+   ## Summary
+   - Implements LangGraph-based healthcare compliance research agent
+   - Adds 6 research tools with transparent step tracking
+   - Fixes deployment issues with gunicorn and port configuration
+   
+   ## Changes
+   - Complete agent implementation with StateGraph
+   - Frontend components with research steps sidebar
+   - Backend API integration
+   - Deployment fixes for cloud platforms
+   ```
+5. **Merge**: Use "Squash and merge" option
+6. **Delete branch**: Check the delete branch option
+
+## Deployment Notes
+- **Dependencies**: All required packages now in requirements.txt
+- **Port Configuration**: Uses PORT environment variable (cloud platform compatible)
+- **Health Checks**: Should now pass with proper gunicorn/uvicorn setup
+- **Environment Variables**: OpenAI_API_KEY, TAVILY_API_KEY, PORT supported
 
 ## Testing
-1. Test main app with both General and Research Reviewer modes
-2. Test PDF upload and RAG functionality
-3. Test mode switching and conversation clearing
-4. Test deep research agent at `/deep-research-agent`
-5. Verify API key management for both interfaces 
+- Local backend: `cd backend && source venv/bin/activate && python main.py`
+- Local frontend: `cd frontend && npm start`
+- Deep research agent: Navigate to `/deep-research-agent` route 
