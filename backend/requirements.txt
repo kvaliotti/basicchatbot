@@ -13,11 +13,11 @@ tiktoken==0.5.2
 
 # LangGraph and LangChain dependencies
 langgraph==0.0.69
-langchain==0.1.0
-langchain-core==0.1.0
-langchain-openai==0.0.2
-langchain-community==0.0.10
-langchain-experimental==0.0.47
+langchain==0.2.11
+langchain-core==0.2.23
+langchain-openai==0.1.17
+langchain-community==0.2.10
+langchain-experimental==0.0.61
 
 # Tool dependencies
 tavily-python==0.3.0
