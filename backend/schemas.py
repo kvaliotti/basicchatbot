@@ -48,4 +48,21 @@ class DeletePDFRequest(BaseModel):
 
 class DeletePDFResponse(BaseModel):
     success: bool
-    message: str 
+    message: str
+
+# Deep Research schemas
+class DeepResearchRequest(BaseModel):
+    message: str
+    api_key: str
+    tavily_api_key: Optional[str] = None
+
+class ResearchStep(BaseModel):
+    step_number: int
+    tool_name: str
+    tool_input: str
+    tool_output: str
+    timestamp: str
+
+class DeepResearchResponse(BaseModel):
+    final_answer: str
+    research_steps: List[ResearchStep] 

@@ -4,6 +4,25 @@ import {
   PDFUploadResponse, PDFInfo, DeletePDFResponse 
 } from '../types/chat';
 
+interface DeepResearchRequest {
+  message: string;
+  api_key: string;
+  tavily_api_key?: string;
+}
+
+interface ResearchStep {
+  step_number: number;
+  tool_name: string;
+  tool_input: string;
+  tool_output: string;
+  timestamp: string;
+}
+
+interface DeepResearchResponse {
+  final_answer: string;
+  research_steps: ResearchStep[];
+}
+
 // PRODUCTION DEPLOYMENT CONFIGURATION:
 // Set REACT_APP_API_URL environment variable in DigitalOcean App Platform
 // Example: https://backend-consultingchatbot-p6ase.ondigitalocean.app
@@ -87,6 +106,16 @@ class ChatService {
       return response.data;
     } catch (error) {
       console.error('Error creating conversation:', error);
+      throw error;
+    }
+  }
+
+  async sendDeepResearchMessage(request: DeepResearchRequest): Promise<DeepResearchResponse> {
+    try {
+      const response = await this.apiClient.post<DeepResearchResponse>('/api/deep-research', request);
+      return response.data;
+    } catch (error) {
+      console.error('Error sending deep research message:', error);
       throw error;
     }
   }
