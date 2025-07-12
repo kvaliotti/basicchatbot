@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ApiKeyInput from './components/ApiKeyInput';
 import ChatInterface from './components/ChatInterface';
-import { ModeSelector } from './components/ModeSelector';
+import DeepResearchAgent from './components/DeepResearchAgent';
+
 import { ChatProvider, useChatContext } from './context/ChatContext';
 import './App.css';
 
-function AppContent() {
+function MainApp() {
   const [apiKey, setApiKey] = useState<string>('');
   const [isApiKeySet, setIsApiKeySet] = useState<boolean>(false);
   const { chatMode, setChatMode } = useChatContext();
@@ -112,9 +114,16 @@ function AppContent() {
 
 function App() {
   return (
-    <ChatProvider>
-      <AppContent />
-    </ChatProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={
+          <ChatProvider>
+            <MainApp />
+          </ChatProvider>
+        } />
+        <Route path="/deep-research-agent" element={<DeepResearchAgent />} />
+      </Routes>
+    </Router>
   );
 }
 

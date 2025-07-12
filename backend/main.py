@@ -9,7 +9,8 @@ from database import SessionLocal, engine, Base
 from models import Conversation, Message
 from schemas import (
     ChatRequest, ChatResponse, ConversationResponse, MessageResponse,
-    PDFUploadResponse, PDFInfoResponse, DeletePDFRequest, DeletePDFResponse
+    PDFUploadResponse, PDFInfoResponse, DeletePDFRequest, DeletePDFResponse,
+    DeepResearchRequest, DeepResearchResponse
 )
 from openai_service import OpenAIService
 from rag_service import RAGService
@@ -177,6 +178,62 @@ async def delete_pdf(request: DeletePDFRequest):
             )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/deep-research", response_model=DeepResearchResponse)
+async def deep_research_endpoint(request: DeepResearchRequest):
+    """
+    Deep research endpoint using LangGraph agent with multiple tools
+    """
+    try:
+        # Validate inputs
+        if not request.message or request.message.strip() == "":
+            raise HTTPException(status_code=400, detail="Message cannot be empty")
+        
+        if not request.api_key or request.api_key.strip() == "":
+            raise HTTPException(status_code=400, detail="OpenAI API key is required")
+        
+        from deepresearchagent import run_research_agent
+        
+        # Run the research agent with tools
+        result = run_research_agent(
+            query=request.message,
+            openai_api_key=request.api_key,
+            tavily_api_key=request.tavily_api_key
+        )
+        
+        # Convert research steps to the schema format
+        from schemas import ResearchStep
+        research_steps = [
+            ResearchStep(
+                step_number=step["step_number"],
+                tool_name=step["tool_name"],
+                tool_input=step["tool_input"],
+                tool_output=step["tool_output"],
+                timestamp=step["timestamp"]
+            )
+            for step in result["research_steps"]
+        ]
+        
+        return DeepResearchResponse(
+            final_answer=result["final_answer"],
+            research_steps=research_steps
+        )
+        
+    except Exception as e:
+        # Handle OpenAI API key errors specifically
+        error_message = str(e)
+        if "401" in error_message and "Incorrect API key" in error_message:
+            raise HTTPException(
+                status_code=401, 
+                detail="Invalid OpenAI API key. Please check your API key and try again."
+            )
+        elif "401" in error_message:
+            raise HTTPException(
+                status_code=401, 
+                detail="Authentication failed. Please check your API key."
+            )
+        else:
+            raise HTTPException(status_code=500, detail=f"Deep research error: {error_message}")
 
 @app.get("/api/conversations", response_model=List[ConversationResponse])
 def get_conversations(db: Session = Depends(get_db)):
