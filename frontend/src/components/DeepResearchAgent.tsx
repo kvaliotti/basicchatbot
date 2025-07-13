@@ -86,10 +86,17 @@ const DeepResearchAgent: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // Convert messages to conversation history format
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
       const response = await chatService.sendDeepResearchMessage({
         message: content.trim(),
         api_key: apiKey,
         tavily_api_key: tavilyApiKey || undefined,
+        conversation_history: conversationHistory
       });
 
       // Update research steps
