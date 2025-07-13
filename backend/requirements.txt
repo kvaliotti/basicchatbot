@@ -1,33 +1,33 @@
-# Core FastAPI stack - Stable updated versions
-fastapi==0.112.4
-uvicorn==0.27.1
+# Core FastAPI stack - FROM YOUR WORKING LOCAL ENVIRONMENT
+fastapi==0.104.1
+uvicorn==0.24.0
 gunicorn==21.2.0
-pydantic==2.7.4
-python-dotenv==1.0.1
-sqlalchemy==2.0.32
-psycopg2-binary==2.9.9
+pydantic==2.11.7
+python-dotenv==1.0.0
+SQLAlchemy==2.0.41
+psycopg2-binary==2.9.10
 
-# AI/ML libraries - Conservative updates (avoiding breaking changes)
+# AI/ML libraries - FROM YOUR WORKING LOCAL ENVIRONMENT
 chromadb==0.4.24
-pypdf==3.17.4
+PyPDF2==3.0.1
 sentence-transformers==2.2.2
-numpy==1.24.4
+numpy==2.3.1
 
-# OpenAI and related - Stable versions
-openai==1.51.2
-tiktoken==0.7.0
+# OpenAI and related - FROM YOUR WORKING LOCAL ENVIRONMENT
+openai==1.93.0
+tiktoken==0.9.0
 
-# LangGraph and LangChain dependencies - Latest compatible set
-langgraph==0.2.35
-langchain==0.3.7
-langchain-core==0.3.15
-langchain-openai==0.2.6
-langchain-community==0.3.7
-langchain-experimental==0.3.3
-langchain-tavily==0.2.6
+# LangGraph and LangChain dependencies - FROM YOUR WORKING LOCAL ENVIRONMENT
+langgraph==0.5.2
+langchain==0.3.26
+langchain-core==0.3.68
+langchain-openai==0.3.27
+langchain-community==0.3.27
+langchain-experimental==0.3.4
+langchain-tavily==0.2.7
 
-# Research tool dependencies - Minor updates
-tavily-python==0.3.3
+# Research tool dependencies - FROM YOUR WORKING LOCAL ENVIRONMENT
+tavily-python==0.7.9
 wikipedia==1.4.0
-requests==2.32.3
-PyMuPDF==1.24.12 
+requests==2.32.4
+PyMuPDF==1.26.3 
