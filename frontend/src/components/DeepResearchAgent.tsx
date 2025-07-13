@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import MessageList from './MessageList';
+import ResearchMessageList from './ResearchMessageList';
 import MessageInput from './MessageInput';
 import ApiKeyInput from './ApiKeyInput';
 import ResearchSteps from './ResearchSteps';
@@ -194,7 +194,7 @@ const DeepResearchAgent: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full flex flex-col">
             {/* Chat Messages - Scrollable area */}
             <div className="flex-1 overflow-y-auto p-4 min-h-0">
-              <MessageList messages={messages} isLoading={isLoading} />
+              <ResearchMessageList messages={messages} isLoading={isLoading} />
               <div ref={messagesEndRef} />
             </div>
             
