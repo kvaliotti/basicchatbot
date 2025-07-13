@@ -21,6 +21,8 @@ This branch contains the implementation of a LangGraph-based healthcare complian
 - **Updated langchain-tavily**: Updated from non-existent 0.1.0 to latest compatible 0.2.7 version
 - **Comprehensive Library Review**: Updated dependencies with conservative version bumps for security and stability
 - **Local Environment Sync**: Updated to exact versions from working local environment (much smarter approach!)
+- **Added python-multipart**: Fixed missing dependency causing FastAPI startup failures
+- **Increased Gunicorn Timeout**: Set to 600 seconds to handle long-running deep research queries
 
 ### Files Modified
 - `backend/requirements.txt`: Added gunicorn==21.2.0 and langchain-tavily>=0.1.0
