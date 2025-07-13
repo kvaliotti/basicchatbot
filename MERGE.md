@@ -23,16 +23,19 @@ This branch contains the implementation of a LangGraph-based healthcare complian
 - **Local Environment Sync**: Updated to exact versions from working local environment (much smarter approach!)
 - **Added python-multipart**: Fixed missing dependency causing FastAPI startup failures
 - **Increased Gunicorn Timeout**: Set to 600 seconds to handle long-running deep research queries
+- **Added Markdown Support**: Deep research agent now renders responses with beautiful markdown formatting
 
 ### Files Modified
-- `backend/requirements.txt`: Added gunicorn==21.2.0 and langchain-tavily>=0.1.0
+- `backend/requirements.txt`: Updated to exact local environment versions + python-multipart
 - `backend/main.py`: Updated port configuration to use environment variable
-- `backend/Procfile`: Updated to use $PORT environment variable
+- `backend/Procfile`: Updated timeout settings and $PORT variable
 - `backend/deepresearchagent.py`: Complete LangGraph agent implementation
 - `backend/schemas.py`: Added DeepResearchRequest/Response models
-- `frontend/src/components/DeepResearchAgent.tsx`: Main component
+- `frontend/src/components/DeepResearchAgent.tsx`: Updated to use markdown rendering
+- `frontend/src/components/ResearchMessageList.tsx`: New markdown-enabled message display
 - `frontend/src/components/ResearchSteps.tsx`: Research tracking sidebar
 - `frontend/src/App.tsx`: Added routing for deep research agent
+- `frontend/package.json`: Added react-markdown dependency
 
 ## How to Merge
 
