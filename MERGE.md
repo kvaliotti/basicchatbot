@@ -17,6 +17,7 @@ This branch contains the implementation of a LangGraph-based healthcare complian
 - **Added langchain-tavily**: Added required langchain-tavily package for TavilySearch
 - **Port Configuration**: Updated main.py to use PORT environment variable
 - **Procfile Update**: Fixed Procfile to use $PORT instead of hardcoded 8080
+- **Dependency Resolution**: Fixed ResolutionTooDeep error by pinning specific compatible versions instead of flexible ranges
 
 ### Files Modified
 - `backend/requirements.txt`: Added gunicorn==21.2.0 and langchain-tavily>=0.1.0
