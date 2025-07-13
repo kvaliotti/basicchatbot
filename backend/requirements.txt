@@ -1,30 +1,33 @@
-fastapi==0.104.1
-uvicorn==0.24.0
+# Core FastAPI stack - Stable updated versions
+fastapi==0.112.4
+uvicorn==0.27.1
 gunicorn==21.2.0
-pydantic==2.5.0
-python-dotenv==1.0.0
-sqlalchemy==2.0.23
+pydantic==2.7.4
+python-dotenv==1.0.1
+sqlalchemy==2.0.32
 psycopg2-binary==2.9.9
-chromadb==0.4.18
-pypdf==3.17.1
-sentence-transformers==2.2.2
-numpy==1.24.3
 
-# OpenAI and related - pinned versions
-openai==1.51.0
+# AI/ML libraries - Conservative updates (avoiding breaking changes)
+chromadb==0.4.24
+pypdf==3.17.4
+sentence-transformers==2.2.2
+numpy==1.24.4
+
+# OpenAI and related - Stable versions
+openai==1.51.2
 tiktoken==0.7.0
 
-# LangGraph and LangChain dependencies - pinned compatible versions
+# LangGraph and LangChain dependencies - Tested compatible versions
 langgraph==0.2.28
 langchain==0.3.1
 langchain-core==0.3.9
 langchain-openai==0.2.1
 langchain-community==0.3.1
 langchain-experimental==0.3.0
-langchain-tavily==0.1.0
+langchain-tavily==0.2.7
 
-# Research tool dependencies - pinned versions
+# Research tool dependencies - Minor updates
 tavily-python==0.3.3
 wikipedia==1.4.0
-requests==2.31.0
-PyMuPDF==1.24.10 
+requests==2.32.3
+PyMuPDF==1.24.12 
