@@ -194,11 +194,20 @@ async def deep_research_endpoint(request: DeepResearchRequest):
         
         from deepresearchagent import run_research_agent
         
-        # Run the research agent with tools
+        # Convert conversation history to the format expected by the agent
+        conversation_history = None
+        if request.conversation_history:
+            conversation_history = [
+                {"role": msg.role, "content": msg.content}
+                for msg in request.conversation_history
+            ]
+        
+        # Run the research agent with tools and conversation history
         result = run_research_agent(
             query=request.message,
             openai_api_key=request.api_key,
-            tavily_api_key=request.tavily_api_key
+            tavily_api_key=request.tavily_api_key,
+            conversation_history=conversation_history
         )
         
         # Convert research steps to the schema format

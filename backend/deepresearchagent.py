@@ -365,7 +365,7 @@ def create_research_graph(openai_api_key: str, tavily_api_key: Optional[str] = N
     return app
 
 
-def run_research_agent(query: str, openai_api_key: str, tavily_api_key: Optional[str] = None):
+def run_research_agent(query: str, openai_api_key: str, tavily_api_key: Optional[str] = None, conversation_history: Optional[List[Dict[str, str]]] = None):
     """Run the research agent with a query"""
     
     # Validate inputs
@@ -378,9 +378,21 @@ def run_research_agent(query: str, openai_api_key: str, tavily_api_key: Optional
     # Create and run the graph
     app = create_research_graph(openai_api_key, tavily_api_key)
     
+    # Convert conversation history to LangChain messages
+    messages = []
+    if conversation_history:
+        for msg in conversation_history:
+            if msg["role"] == "user":
+                messages.append(HumanMessage(content=msg["content"]))
+            elif msg["role"] == "assistant":
+                messages.append(AIMessage(content=msg["content"]))
+    
+    # Add the current query
+    messages.append(HumanMessage(content=query))
+    
     # Initialize state
     initial_state = {
-        "messages": [HumanMessage(content=query)],
+        "messages": messages,
         "openai_api_key": openai_api_key,
         "tavily_api_key": tavily_api_key,
         "research_steps": [],

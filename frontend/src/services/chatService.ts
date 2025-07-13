@@ -4,10 +4,16 @@ import {
   PDFUploadResponse, PDFInfo, DeletePDFResponse 
 } from '../types/chat';
 
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 interface DeepResearchRequest {
   message: string;
   api_key: string;
   tavily_api_key?: string;
+  conversation_history?: ChatMessage[];
 }
 
 interface ResearchStep {

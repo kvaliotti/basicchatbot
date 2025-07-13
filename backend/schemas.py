@@ -51,10 +51,15 @@ class DeletePDFResponse(BaseModel):
     message: str
 
 # Deep Research schemas
+class ChatMessage(BaseModel):
+    role: str  # 'user' or 'assistant'
+    content: str
+
 class DeepResearchRequest(BaseModel):
     message: str
     api_key: str
     tavily_api_key: Optional[str] = None
+    conversation_history: Optional[List[ChatMessage]] = None
 
 class ResearchStep(BaseModel):
     step_number: int
