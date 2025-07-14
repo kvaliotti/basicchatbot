@@ -87,7 +87,7 @@ def enter_chain(message: str, members: List[str]):
 def enter_chain_informational(message: str):
     results = {
         "messages": [HumanMessage(content=message)],
-        "team_members": ["InfoSearcher", "PaperSearcher", "PaperResearchSupervisor"],  # For PaperReviewTeamState
+        "team_members": ["PaperSearcher", "PaperResearchSupervisor"],  # For PaperReviewTeamState
         "next": "",
     }
     return results
@@ -158,10 +158,10 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
     
     log_agent_execution("System", "initializing", "Starting LinkedIn post writing agent")
     
-    llm = ChatOpenAI(model="gpt-4.1-mini", api_key=openai_api_key)
-    llm_supervisor = ChatOpenAI(model="gpt-4.1-mini", api_key=openai_api_key)
-    llm_research = ChatOpenAI(model="gpt-4.1-nano", api_key=openai_api_key)
-    llm_verification = ChatOpenAI(model="gpt-4.1-nano", api_key=openai_api_key)
+    llm = ChatOpenAI(model="gpt-4.1", api_key=openai_api_key)
+    llm_supervisor = ChatOpenAI(model="gpt-4.1", api_key=openai_api_key)
+    llm_research = ChatOpenAI(model="gpt-4.1", api_key=openai_api_key)
+    llm_verification = ChatOpenAI(model="gpt-4.1", api_key=openai_api_key)
     
     # Create tool instances
     tavily_search = TavilySearchResults(max_results=5, tavily_api_key=tavily_api_key) if tavily_api_key else None
@@ -187,44 +187,34 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
             return f"Error retrieving from paper: {str(e)}"
     
     # PAPER RESEARCH TEAM
-    info_search_tools = [tavily_search] if tavily_search else []
-    info_search_agent = create_agent(
-        llm_research,
-        info_search_tools,
-        "You are a research assistant who can search for up-to-date info using the tavily search engine about ML/AI topics.",
-    )
-    info_search_node = functools.partial(agent_node, agent=info_search_agent, name="InfoSearcher")
 
     paper_research_agent = create_agent(
         llm_research,
         [paper_retriever],
-        "You are a research assistant who can provide specific information from the uploaded scientific paper. Focus on extracting key findings, methodologies, and results.",
+        "You are a research assistant who can provide specific information from the uploaded scientific paper. Extract key findings, methodologies, and results from the paper..",
     )
     paper_research_node = functools.partial(agent_node, agent=paper_research_agent, name="PaperSearcher")
 
     paper_research_supervisor_agent = create_team_supervisor(
         llm,
         ("You are a supervisor tasked with managing a conversation between the"
-        " following workers: InfoSearcher, PaperSearcher. Given the following user request,"
+        " following workers: PaperSearcher. Given the following user request,"
         " determine what research is needed and respond with the worker to act next. Each worker will perform a"
         " task and respond with their results and status. "
-        " Use InfoSearcher for general ML/AI information and current trends."
         " Use PaperSearcher to get information from the uploaded research paper. Make sure we get accurate context and information about the research paper."
         "  Invoke each agent at least once. When finished, respond with FINISH."),
-        ["InfoSearcher", "PaperSearcher"],
+        ["PaperSearcher"],
     )
 
     paper_research_graph = StateGraph(PaperReviewTeamState)
-    paper_research_graph.add_node("InfoSearcher", info_search_node)
     paper_research_graph.add_node("PaperSearcher", paper_research_node)
     paper_research_graph.add_node("PaperResearchSupervisor", paper_research_supervisor_agent)
 
-    paper_research_graph.add_edge("InfoSearcher", "PaperResearchSupervisor")
     paper_research_graph.add_edge("PaperSearcher", "PaperResearchSupervisor")
     paper_research_graph.add_conditional_edges(
         "PaperResearchSupervisor",
         lambda x: x["next"],
-        {"InfoSearcher": "InfoSearcher", "PaperSearcher": "PaperSearcher", "FINISH": END},
+        {"PaperSearcher": "PaperSearcher", "FINISH": END},
     )
 
     paper_research_graph.set_entry_point("PaperResearchSupervisor")
@@ -408,18 +398,6 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
         agent_node, agent=context_aware_note_taking_agent, name="NoteTaker"
     )
 
-    copy_editor_agent = create_agent(
-        llm,
-        [write_document, edit_document, read_document],
-        ("You are an expert copy editor who focuses on fixing grammar, spelling, and tone issues. Make sure to make the post precise and specific. "
-        "When creating new versions, use 'EDITED_' prefix for your files (e.g., 'EDITED_Topic_Name'). You can also edit existing draft files directly.\n"
-        "Below are files currently in your directory:\n{current_files}"),
-    )
-    context_aware_copy_editor_agent = create_context_aware_agent(copy_editor_agent, prelude)
-    copy_editing_node = functools.partial(
-        agent_node, agent=context_aware_copy_editor_agent, name="CopyEditor"
-    )
-
     empathy_editor_agent = create_agent(
         llm,
         [write_document, edit_document, read_document],
@@ -441,19 +419,17 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
         " respond with the worker to act next. You can invoke any agent more than once if you need to. It is a good idea to start with NoteTaker agent, because that agent can provide an outline for the post. Each worker will perform a"
         " task and respond with their results and status. Invoke each agent at least once. When each agent is finished,"
         " you must respond with FINISH."),
-        ["DocWriter", "NoteTaker", "EmpathyEditor", "CopyEditor"],
+        ["DocWriter", "NoteTaker", "EmpathyEditor"],
     )
 
     authoring_graph = StateGraph(DocWritingState)
     authoring_graph.add_node("DocWriter", doc_writing_node)
     authoring_graph.add_node("NoteTaker", note_taking_node)
-    authoring_graph.add_node("CopyEditor", copy_editing_node)
     authoring_graph.add_node("EmpathyEditor", empathy_node)
     authoring_graph.add_node("supervisor", doc_writing_supervisor)
 
     authoring_graph.add_edge("DocWriter", "supervisor")
     authoring_graph.add_edge("NoteTaker", "supervisor")
-    authoring_graph.add_edge("CopyEditor", "supervisor")
     authoring_graph.add_edge("EmpathyEditor", "supervisor")
 
     authoring_graph.add_conditional_edges(
@@ -462,7 +438,6 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
         {
             "DocWriter": "DocWriter",
             "NoteTaker": "NoteTaker",
-            "CopyEditor" : "CopyEditor",
             "EmpathyEditor" : "EmpathyEditor",
             "FINISH": END,
         },
@@ -479,13 +454,14 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
 
     # VERIFICATION TEAM
     correctness_tools = [write_document, edit_document, read_document]
+    
     if tavily_search:
         correctness_tools.append(tavily_search)
     
     correctness_agent = create_agent(
         llm_verification,
         correctness_tools,
-        ("You are an expert in fact-checking. You can use the tavily tool to fact-check the document.\n"
+        ("You are an expert in fact-checking. You can use the tavily tool to fact-check the document. Update the document with the correct information.\n"
         "Below are files currently in your directory:\n{current_files}"),
     )
     context_aware_correctness_agent = create_context_aware_agent(correctness_agent, prelude)
@@ -496,7 +472,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
     linkedin_style_checker_agent = create_agent(
         llm_verification,
         [write_document, edit_document, read_document],
-        ("You are an expert in LinkedIn style and tone. You evaluate the document to see whether it fits with LinkedIn's style and tone. If the post needs to be improved, provide your analysis so that the supervisor knows the post needs to be directed back to the writing team.  \n"
+        ("You are an expert in LinkedIn style and tone. You evaluate the document to see whether it fits with LinkedIn's style and tone. If the post needs to be improved, update the document.  \n"
         "Below are files currently in your directory:\n{current_files}"),
     )
     context_aware_linkedin_style_checker_agent = create_context_aware_agent(linkedin_style_checker_agent, prelude)
@@ -535,7 +511,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
 
     # Create chains for each team
     authoring_chain = (
-        RunnableLambda(functools.partial(enter_chain, members=["DocWriter", "NoteTaker", "EmpathyEditor", "CopyEditor"]))
+        RunnableLambda(functools.partial(enter_chain, members=["DocWriter", "NoteTaker", "EmpathyEditor"]))
         | compiled_authoring_graph
     )
 
@@ -552,8 +528,8 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
         " PaperResearchTeam researches the paper and gathers information."
         " AuthoringTeam writes and refines the LinkedIn post."
         " VerificationTeam fact-checks and ensures LinkedIn style compliance."
-        " Respond with the team to act next. You can invoke any team more than once if you need to. Each team will perform their tasks"
-        " and respond with their results and status.  YOU MUST invoke each team at least once. CHECK that you invoked each team at least once before finishing. Typically, PaperResearchTeam is the first team, AuthoringTeam is the second one, VerificationTeam is the third one (AuthoringTeam may jump in after VerificaionTeam for fixes). When all teams are finished,"
+        " Respond with the team to act next. YEach team will perform their tasks"
+        " and respond with their results and status.  YOU MUST invoke each team at least once. CHECK that you invoked each team at least once before finishing. Typically, PaperResearchTeam is the first team, AuthoringTeam is the second one, VerificationTeam is the third one. When all teams are finished,"
         " you must respond with FINISH.",
         ["PaperResearchTeam", "AuthoringTeam", "VerificationTeam"],
     )
