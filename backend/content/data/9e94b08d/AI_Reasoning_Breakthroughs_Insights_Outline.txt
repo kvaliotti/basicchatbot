@@ -1,6 +1,0 @@
-1. Introduction to AI Reasoning and LRMs
-2. Key Concepts of the Study
-3. Methodology Overview
-4. Key Recommendations for Future Studies
-5. Practical Applications and Future Directions
-6. Conclusion and Call to Action

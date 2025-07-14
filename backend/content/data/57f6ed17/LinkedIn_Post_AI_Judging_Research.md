@@ -1,3 +1,0 @@
-The post is engaging and suitable for LinkedIn, effectively summarizing the key concepts, methodology, and findings from the paper "One Token to Fool LLM-as-a-Judge." It maintains a professional yet accessible tone, incorporates relevant technical details, and uses a clear structure to highlight the importance of the research.
-
-No immediate improvements are necessary. If a different tone, focus, or audience-specific adjustment is desired, please let me know.

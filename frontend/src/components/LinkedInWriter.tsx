@@ -62,27 +62,39 @@ const LinkedInWriter: React.FC = () => {
       const contents: Record<string, string> = {};
       const validDocuments: WorkingDirectoryFile[] = [];
       
-      for (const doc of response.files) {
-        try {
-          const contentResponse = await chatService.getFileContent(workingDirectory, doc.filename);
-          contents[doc.filename] = contentResponse.content;
-          validDocuments.push(doc);
-          console.log(`✅ Loaded content for ${doc.filename}: ${contentResponse.content.length} chars`);
-        } catch (error) {
-          console.error(`❌ Error fetching content for ${doc.filename}:`, error);
-          // Retry once for potential timing issues
+      // Process documents in batches to prevent too many simultaneous requests
+      const batchSize = 3; // Process 3 documents at a time
+      for (let i = 0; i < response.files.length; i += batchSize) {
+        const batch = response.files.slice(i, i + batchSize);
+        
+        await Promise.all(batch.map(async (doc) => {
           try {
-            await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
-            const retryResponse = await chatService.getFileContent(workingDirectory, doc.filename);
-            contents[doc.filename] = retryResponse.content;
+            const contentResponse = await chatService.getFileContent(workingDirectory, doc.filename);
+            contents[doc.filename] = contentResponse.content;
             validDocuments.push(doc);
-            console.log(`✅ Retry successful for ${doc.filename}: ${retryResponse.content.length} chars`);
-          } catch (retryError) {
-            console.error(`❌ Retry failed for ${doc.filename}:`, retryError);
-            contents[doc.filename] = `❌ Error loading content: ${retryError instanceof Error ? retryError.message : 'Unknown error'}`;
-            validDocuments.push(doc); // Still include it so user can see the error
+            console.log(`✅ Loaded content for ${doc.filename}: ${contentResponse.content.length} chars`);
+          } catch (error) {
+            console.error(`❌ Error fetching content for ${doc.filename}:`, error);
+            // Reduced retry delay and only retry if it's likely a timing issue
+            if (error instanceof Error && error.message.includes('404')) {
+              try {
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s for file to be written
+                const retryResponse = await chatService.getFileContent(workingDirectory, doc.filename);
+                contents[doc.filename] = retryResponse.content;
+                validDocuments.push(doc);
+                console.log(`✅ Retry successful for ${doc.filename}: ${retryResponse.content.length} chars`);
+              } catch (retryError) {
+                console.error(`❌ Retry failed for ${doc.filename}:`, retryError);
+                contents[doc.filename] = `❌ Error loading content: ${retryError instanceof Error ? retryError.message : 'Unknown error'}`;
+                validDocuments.push(doc); // Still include it so user can see the error
+              }
+            } else {
+              // For non-404 errors, don't retry
+              contents[doc.filename] = `❌ Error loading content: ${error instanceof Error ? error.message : 'Unknown error'}`;
+              validDocuments.push(doc);
+            }
           }
-        }
+        }));
       }
       
       // Update both states atomically to prevent race condition
@@ -130,7 +142,7 @@ const LinkedInWriter: React.FC = () => {
         } catch (error) {
           console.error('Error fetching agent logs:', error);
         }
-      }, 500); // Poll every 500ms for real-time updates
+      }, 1000); // Poll every 1 second for real-time updates (reduced from 500ms to prevent spam)
     }
 
     return () => {
@@ -138,7 +150,7 @@ const LinkedInWriter: React.FC = () => {
     };
   }, [isLoading, workingDirectory]);
 
-  // Poll for document updates during execution
+  // Poll for document updates during execution - LESS FREQUENT to prevent spamming
   useEffect(() => {
     let pollInterval: NodeJS.Timeout | null = null;
     
@@ -149,12 +161,12 @@ const LinkedInWriter: React.FC = () => {
         } catch (error) {
           console.error('Error polling documents:', error);
         }
-      }, 1000); // Poll documents every 1 second during execution
+      }, 3000); // Poll documents every 3 seconds during execution to prevent spamming
     } else if (!isLoading && workingDirectory && documents.length === 0) {
       // One final fetch after execution completes if no documents loaded yet
       setTimeout(() => {
         fetchDocuments();
-      }, 500);
+      }, 1000);
     }
 
     return () => {
@@ -199,9 +211,10 @@ const LinkedInWriter: React.FC = () => {
 
     setIsLoading(true);
     setResult(null);
-    setAgentLogs([]);
+    setAgentLogs([]); // Clear existing logs
     setDocuments([]);
     setDocumentContents({});
+    setWorkingDirectory(null); // Reset working directory to prevent stale data
     setSidebarTab('logs'); // Switch to logs tab to show progress
 
     try {
@@ -255,11 +268,15 @@ const LinkedInWriter: React.FC = () => {
   };
 
   const handleNewPost = () => {
+    // Complete reset of all state for new post
     setResult(null);
     setAgentLogs([]);
     setDocuments([]);
     setDocumentContents({});
     setWorkingDirectory(null);
+    setIsLoading(false);
+    setSidebarTab('logs');
+    console.log('🔄 New post - all state reset');
   };
 
   const formatTimestamp = (timestamp: string) => {

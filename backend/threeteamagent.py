@@ -154,7 +154,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
     """Create the complete LinkedIn post writing agent"""
     
     global working_directory, execution_logs
-    execution_logs = []  # Reset logs for each run
+    # Note: execution_logs is reset in run_linkedin_agent to ensure clean state
     
     log_agent_execution("System", "initializing", "Starting LinkedIn post writing agent")
     
@@ -575,6 +575,10 @@ def run_linkedin_agent(query: str, openai_api_key: str, tavily_api_key: Optional
     """Run the LinkedIn post writing agent"""
     
     global working_directory, execution_logs
+    
+    # IMPORTANT: Reset execution logs for each new request to prevent stale data
+    execution_logs = []
+    working_directory = None
     
     # Validate inputs
     if not query or query.strip() == "":
