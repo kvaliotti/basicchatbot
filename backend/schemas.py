@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 from enum import Enum
 
-# NEW: Chat mode enumeration
+# Chat mode enumeration
 class ChatMode(str, Enum):
     general = "general"
     research_reviewer = "research_reviewer"
@@ -30,7 +30,7 @@ class ConversationResponse(BaseModel):
     created_at: datetime
     messages: List[MessageResponse]
 
-# New schemas for PDF/RAG functionality
+# PDF Management schemas
 class PDFUploadResponse(BaseModel):
     filename: str
     chunks_count: int
@@ -50,7 +50,7 @@ class DeletePDFResponse(BaseModel):
     success: bool
     message: str
 
-# Deep Research schemas
+# Deep Research Agent schemas
 class ChatMessage(BaseModel):
     role: str  # 'user' or 'assistant'
     content: str
@@ -71,3 +71,48 @@ class ResearchStep(BaseModel):
 class DeepResearchResponse(BaseModel):
     final_answer: str
     research_steps: List[ResearchStep] 
+
+# LinkedIn Post Writing Agent schemas
+class LinkedInPostRequest(BaseModel):
+    message: str
+    api_key: str
+    tavily_api_key: Optional[str] = None
+    pdf_filename: Optional[str] = None  # For RAG with uploaded PDF
+
+# Agent execution logs schemas
+class AgentLogEntry(BaseModel):
+    timestamp: str
+    agent_name: str
+    action: str
+    details: str
+
+class LinkedInPostResponse(BaseModel):
+    final_answer: str
+    working_directory: Optional[str] = None
+    execution_logs: Optional[List[AgentLogEntry]] = None
+
+class AgentLogsResponse(BaseModel):
+    logs: List[AgentLogEntry]
+    working_directory: Optional[str] = None
+
+# Working directory files schemas
+class WorkingDirectoryFile(BaseModel):
+    filename: str
+    file_path: str
+    size: int
+    modified: str
+    content_preview: str  # First 200 chars
+
+class WorkingDirectoryResponse(BaseModel):
+    files: List[WorkingDirectoryFile]
+    directory_path: str
+
+class FileContentRequest(BaseModel):
+    working_directory: str
+    filename: str
+
+class FileContentResponse(BaseModel):
+    filename: str
+    content: str
+    file_path: str
+    size: int 

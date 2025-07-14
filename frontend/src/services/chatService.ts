@@ -29,6 +29,58 @@ interface DeepResearchResponse {
   research_steps: ResearchStep[];
 }
 
+interface LinkedInPostRequest {
+  message: string;
+  api_key: string;
+  tavily_api_key?: string;
+  pdf_filename?: string;
+}
+
+interface LinkedInPostResponse {
+  final_answer: string;
+  working_directory?: string;
+  execution_logs?: AgentLogEntry[];
+}
+
+// Agent logs interfaces
+interface AgentLogEntry {
+  timestamp: string;
+  agent_name: string;
+  action: string;
+  details: string;
+}
+
+interface AgentLogsResponse {
+  logs: AgentLogEntry[];
+  working_directory?: string;
+}
+
+// Working directory interfaces
+interface WorkingDirectoryFile {
+  filename: string;
+  file_path: string;
+  size: number;
+  modified: string;
+  content_preview: string;
+}
+
+interface WorkingDirectoryResponse {
+  files: WorkingDirectoryFile[];
+  directory_path: string;
+}
+
+interface FileContentRequest {
+  working_directory: string;
+  filename: string;
+}
+
+interface FileContentResponse {
+  filename: string;
+  content: string;
+  file_path: string;
+  size: number;
+}
+
 // PRODUCTION DEPLOYMENT CONFIGURATION:
 // Set REACT_APP_API_URL environment variable in DigitalOcean App Platform
 // Example: https://backend-consultingchatbot-p6ase.ondigitalocean.app
@@ -125,6 +177,59 @@ class ChatService {
       throw error;
     }
   }
+
+  async sendLinkedInPostMessage(request: LinkedInPostRequest): Promise<LinkedInPostResponse> {
+    try {
+      const response = await this.apiClient.post<LinkedInPostResponse>('/api/linkedin-writer', request);
+      return response.data;
+    } catch (error) {
+      console.error('Error sending LinkedIn post message:', error);
+      throw error;
+    }
+  }
+
+  // Agent logs and documents methods
+  async getAgentLogs(): Promise<AgentLogsResponse> {
+    try {
+      const response = await this.apiClient.get<AgentLogsResponse>('/api/agent-logs');
+      return response.data;
+    } catch (error) {
+      console.error('Error getting agent logs:', error);
+      throw error;
+    }
+  }
+
+  async getWorkingDirectoryFiles(workingDirectory: string): Promise<WorkingDirectoryResponse> {
+    try {
+      const encodedPath = encodeURIComponent(workingDirectory);
+      const response = await this.apiClient.get<WorkingDirectoryResponse>(`/api/working-directory/${encodedPath}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error getting working directory files:', error);
+      throw error;
+    }
+  }
+
+  async getFileContent(workingDirectory: string, filename: string): Promise<FileContentResponse> {
+    try {
+      const response = await this.apiClient.post<FileContentResponse>('/api/file-content', {
+        working_directory: workingDirectory,
+        filename: filename
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error getting file content:', error);
+      throw error;
+    }
+  }
 }
 
-export const chatService = new ChatService(); 
+export const chatService = new ChatService();
+export type { 
+  AgentLogEntry, 
+  AgentLogsResponse, 
+  WorkingDirectoryFile, 
+  WorkingDirectoryResponse, 
+  FileContentResponse,
+  LinkedInPostResponse
+}; 

@@ -1,0 +1,1 @@
+The LinkedIn post on "Unpacking the Implications of Recent Research on Large Reasoning Models (LRMs)" has been polished and saved as a document titled "Unpacking_LRMs_LinkedIn_Post.md". It's now ready for sharing to increase engagement and spark discussions! 🚀

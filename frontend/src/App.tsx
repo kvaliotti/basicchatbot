@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import ApiKeyInput from './components/ApiKeyInput';
 import ChatInterface from './components/ChatInterface';
 import DeepResearchAgent from './components/DeepResearchAgent';
+import LinkedInWriter from './components/LinkedInWriter';
 
 import { ChatProvider, useChatContext } from './context/ChatContext';
 import './App.css';
@@ -122,6 +123,7 @@ function App() {
           </ChatProvider>
         } />
         <Route path="/deep-research-agent" element={<DeepResearchAgent />} />
+        <Route path="/linkedin-writer" element={<LinkedInWriter />} />
       </Routes>
     </Router>
   );
