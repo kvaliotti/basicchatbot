@@ -158,7 +158,10 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
     
     log_agent_execution("System", "initializing", "Starting LinkedIn post writing agent")
     
-    llm = ChatOpenAI(model="gpt-4.1-nano", api_key=openai_api_key)
+    llm = ChatOpenAI(model="gpt-4.1-mini", api_key=openai_api_key)
+    llm_supervisor = ChatOpenAI(model="gpt-4.1", api_key=openai_api_key)
+    llm_research = ChatOpenAI(model="gpt-4.1-nano", api_key=openai_api_key)
+    llm_verification = ChatOpenAI(model="gpt-4.1-nano", api_key=openai_api_key)
     
     # Create tool instances
     tavily_search = TavilySearchResults(max_results=5, tavily_api_key=tavily_api_key) if tavily_api_key else None
@@ -186,14 +189,14 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
     # PAPER RESEARCH TEAM
     info_search_tools = [tavily_search] if tavily_search else []
     info_search_agent = create_agent(
-        llm,
+        llm_research,
         info_search_tools,
         "You are a research assistant who can search for up-to-date info using the tavily search engine about ML/AI topics.",
     )
     info_search_node = functools.partial(agent_node, agent=info_search_agent, name="InfoSearcher")
 
     paper_research_agent = create_agent(
-        llm,
+        llm_research,
         [paper_retriever],
         "You are a research assistant who can provide specific information from the uploaded scientific paper. Focus on extracting key findings, methodologies, and results.",
     )
@@ -430,7 +433,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
     )
 
     doc_writing_supervisor = create_team_supervisor(
-        llm,
+        llm_supervisor,
         ("You are a supervisor tasked with managing a conversation between the"
         " following workers: {team_members}. You should always verify the technical"
         " contents after any edits are made. "
@@ -480,7 +483,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
         correctness_tools.append(tavily_search)
     
     correctness_agent = create_agent(
-        llm,
+        llm_verification,
         correctness_tools,
         ("You are an expert in fact-checking. You can use the tavily tool to fact-check the document.\n"
         "Below are files currently in your directory:\n{current_files}"),
@@ -491,7 +494,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
     )
 
     linkedin_style_checker_agent = create_agent(
-        llm,
+        llm_verification,
         [write_document, edit_document, read_document],
         ("You are an expert in LinkedIn style and tone. You evaluate the document to see whether it fits with LinkedIn's style and tone. If the post needs to be improved, provide your analysis so that the supervisor knows the post needs to be directed back to the writing team.  \n"
         "Below are files currently in your directory:\n{current_files}"),
@@ -543,7 +546,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
 
     # MEGA SUPERVISOR COORDINATION
     mega_supervisor_node = create_team_supervisor(
-        llm,
+        llm_supervisor,
         "You are a supervisor tasked with managing a conversation between the"
         " following teams: {team_members}. The teams work together to create LinkedIn posts about ML/AI papers."
         " PaperResearchTeam researches the paper and gathers information."
