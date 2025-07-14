@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
+from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
@@ -10,7 +10,9 @@ from models import Conversation, Message
 from schemas import (
     ChatRequest, ChatResponse, ConversationResponse, MessageResponse,
     PDFUploadResponse, PDFInfoResponse, DeletePDFRequest, DeletePDFResponse,
-    DeepResearchRequest, DeepResearchResponse
+    DeepResearchRequest, DeepResearchResponse, LinkedInPostRequest, LinkedInPostResponse,
+    AgentLogsResponse, AgentLogEntry, WorkingDirectoryResponse, WorkingDirectoryFile,
+    FileContentRequest, FileContentResponse
 )
 from openai_service import OpenAIService
 from rag_service import RAGService
@@ -243,6 +245,179 @@ async def deep_research_endpoint(request: DeepResearchRequest):
             )
         else:
             raise HTTPException(status_code=500, detail=f"Deep research error: {error_message}")
+
+@app.post("/api/linkedin-writer", response_model=LinkedInPostResponse)
+async def linkedin_writer_endpoint(request: LinkedInPostRequest):
+    """
+    LinkedIn post writing endpoint using multi-crew agent system
+    """
+    try:
+        # Validate inputs
+        if not request.message or request.message.strip() == "":
+            raise HTTPException(status_code=400, detail="Message cannot be empty")
+        
+        if not request.api_key or request.api_key.strip() == "":
+            raise HTTPException(status_code=400, detail="OpenAI API key is required")
+        
+        from threeteamagent import run_linkedin_agent
+        
+        # Get RAG service if PDF is specified
+        rag_service_instance = None
+        if request.pdf_filename:
+            rag_service_instance = rag_service
+        
+        # Run the LinkedIn agent
+        result = run_linkedin_agent(
+            query=request.message,
+            openai_api_key=request.api_key,
+            tavily_api_key=request.tavily_api_key,
+            rag_service=rag_service_instance,
+            pdf_filename=request.pdf_filename
+        )
+        
+        return LinkedInPostResponse(
+            final_answer=result["final_answer"],
+            working_directory=result.get("working_directory"),
+            execution_logs=result.get("execution_logs", [])
+        )
+        
+    except Exception as e:
+        # Handle OpenAI API key errors specifically
+        error_message = str(e)
+        if "401" in error_message and "Incorrect API key" in error_message:
+            raise HTTPException(
+                status_code=401, 
+                detail="Invalid OpenAI API key. Please check your API key and try again."
+            )
+        elif "401" in error_message:
+            raise HTTPException(
+                status_code=401, 
+                detail="Authentication failed. Please check your API key."
+            )
+        else:
+            raise HTTPException(status_code=500, detail=f"LinkedIn agent error: {error_message}")
+
+@app.get("/api/agent-logs", response_model=AgentLogsResponse)
+async def get_agent_logs():
+    """
+    Get current agent execution logs
+    """
+    try:
+        from threeteamagent import get_execution_logs, get_working_directory
+        
+        logs = get_execution_logs()
+        working_dir = get_working_directory()
+        
+        # Convert logs to schema format
+        agent_logs = [
+            AgentLogEntry(
+                timestamp=log["timestamp"],
+                agent_name=log["agent_name"],
+                action=log["action"],
+                details=log["details"]
+            )
+            for log in logs
+        ]
+        
+        return AgentLogsResponse(
+            logs=agent_logs,
+            working_directory=working_dir
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting agent logs: {str(e)}")
+
+@app.get("/api/working-directory/{working_directory:path}", response_model=WorkingDirectoryResponse)
+async def get_working_directory_files(working_directory: str):
+    """
+    Get files from the agent working directory
+    """
+    try:
+        import os
+        from pathlib import Path
+        from datetime import datetime
+        
+        # Validate directory exists and is safe
+        work_dir = Path(working_directory)
+        if not work_dir.exists():
+            raise HTTPException(status_code=404, detail="Working directory not found")
+        
+        if not work_dir.is_dir():
+            raise HTTPException(status_code=400, detail="Path is not a directory")
+        
+        # Get all files in directory
+        files = []
+        for file_path in work_dir.rglob("*"):
+            if file_path.is_file():
+                try:
+                    stat = file_path.stat()
+                    
+                    # Read preview (first 200 chars)
+                    preview = ""
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            preview = f.read(200)
+                    except:
+                        preview = "[Binary file or encoding error]"
+                    
+                    files.append(WorkingDirectoryFile(
+                        filename=file_path.name,
+                        file_path=str(file_path.relative_to(work_dir)),
+                        size=stat.st_size,
+                        modified=datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                        content_preview=preview
+                    ))
+                except Exception as e:
+                    # Skip files that can't be processed
+                    continue
+        
+        return WorkingDirectoryResponse(
+            files=files,
+            directory_path=str(work_dir)
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading working directory: {str(e)}")
+
+@app.post("/api/file-content", response_model=FileContentResponse)
+async def get_file_content(request: FileContentRequest):
+    """
+    Get full content of a file from working directory
+    """
+    try:
+        from pathlib import Path
+        
+        work_dir = Path(request.working_directory)
+        file_path = work_dir / request.filename
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        if not file_path.is_file():
+            raise HTTPException(status_code=400, detail="Path is not a file")
+        
+        # Read file content
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except UnicodeDecodeError:
+            raise HTTPException(status_code=400, detail="File cannot be read as text")
+        
+        stat = file_path.stat()
+        
+        return FileContentResponse(
+            filename=request.filename,
+            content=content,
+            file_path=str(file_path.relative_to(work_dir)),
+            size=stat.st_size
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading file: {str(e)}")
 
 @app.get("/api/conversations", response_model=List[ConversationResponse])
 def get_conversations(db: Session = Depends(get_db)):

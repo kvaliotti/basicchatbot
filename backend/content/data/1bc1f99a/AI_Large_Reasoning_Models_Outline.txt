@@ -1,0 +1,18 @@
+1. Title: Unlocking the True Potential of Large Reasoning Models in AI
+2. Introduction: Overview of advancements in AI and the importance of evaluating Large Reasoning Models (LRMs)
+3. Key Concepts:
+4. 1. Understanding Model Capabilities
+5. - Discussion on the misinterpretation of 'reasoning collapse' due to experimental design flaws.
+6. 2. Complexity and Accuracy
+7. - Analysis of how model accuracy declines sharply at high complexity thresholds.
+8. Innovative Methodology:
+9. - Presentation of a rigorous framework for evaluating reasoning models.
+10. - Importance of distinguishing between inability to solve and strategic output limitation.
+11. - Highlighting the control of unsolvable instances in benchmarking.
+12. Findings and Implications:
+13. - Insights on models' awareness of output constraints and pattern recognition.
+14. - Necessity to change evaluation practices to better reflect model reasoning.
+15. Practical Applications:
+16. - Relevance of these findings in real-world applications such as decision-making and problem-solving.
+17. Conclusion: Emphasizing the need for meticulous evaluation to unlock the potential of LRMs in AI.
+18. Call to Action: Encouragement to rethink evaluation methods in AI research.
