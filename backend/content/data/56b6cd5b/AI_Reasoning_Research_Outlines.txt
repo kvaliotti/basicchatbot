@@ -1,8 +1,0 @@
-1. Introduction to AI Reasoning and LRMs
-2. Key Research Challenges in AI Reasoning
-3. 1. Distinguishing Capability from Constraints
-4. 2. Rethinking Evaluation Frameworks
-5. 3. Complexity Metrics Beyond Solution Length
-6. 4. Diverse Solution Representations
-7. 5. Experimental Validation
-8. Conclusion and Call to Action
