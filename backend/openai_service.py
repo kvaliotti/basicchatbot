@@ -29,10 +29,10 @@ class OpenAIService:
             messages.append({"role": "user", "content": user_message})
             
             response = self.client.chat.completions.create(
-                model="gpt-4.1",
+                model="gpt-4.1-mini",
                 messages=messages,
                 max_tokens=2500,
-                temperature=0.7
+                temperature=0.1
             )
             
             return response.choices[0].message.content
