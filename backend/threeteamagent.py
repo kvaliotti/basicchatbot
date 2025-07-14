@@ -191,7 +191,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
     paper_research_agent = create_agent(
         llm_research,
         [paper_retriever],
-        "You are a research assistant who can provide specific information from the uploaded scientific paper. Extract key findings, methodologies, and results from the paper..",
+        "You are a research assistant who can provide specific information from the uploaded scientific paper. Extract key findings, methodologies, and results from the paper. One extraction is enough.",
     )
     paper_research_node = functools.partial(agent_node, agent=paper_research_agent, name="PaperSearcher")
 
@@ -202,7 +202,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
         " determine what research is needed and respond with the worker to act next. Each worker will perform a"
         " task and respond with their results and status. "
         " Use PaperSearcher to get information from the uploaded research paper. Make sure we get accurate context and information about the research paper."
-        "  Invoke each agent at least once. When finished, respond with FINISH."),
+        "  When finished, respond with FINISH."),
         ["PaperSearcher"],
     )
 
@@ -416,7 +416,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
         " following workers: {team_members}. You should always verify the technical"
         " contents after any edits are made. "
         "Given the following user request,"
-        " respond with the worker to act next. You can invoke any agent more than once if you need to. It is a good idea to start with NoteTaker agent, because that agent can provide an outline for the post. Each worker will perform a"
+        " respond with the worker to act next. It is a good idea to start with NoteTaker agent, because that agent can provide an outline for the post. Each worker will perform a"
         " task and respond with their results and status. Invoke each agent at least once. When each agent is finished,"
         " you must respond with FINISH."),
         ["DocWriter", "NoteTaker", "EmpathyEditor"],
