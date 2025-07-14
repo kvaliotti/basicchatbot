@@ -525,11 +525,11 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
         llm_supervisor,
         "You are a supervisor tasked with managing a conversation between the"
         " following teams: {team_members}. The teams work together to create LinkedIn posts about ML/AI papers."
-        " PaperResearchTeam researches the paper and gathers information."
+        " PaperResearchTeam researches and extracts information from the scientific paper we are going to write a post about."
         " AuthoringTeam writes and refines the LinkedIn post."
         " VerificationTeam fact-checks and ensures LinkedIn style compliance."
         " Respond with the team to act next. YEach team will perform their tasks"
-        " and respond with their results and status.  YOU MUST invoke each team at least once. CHECK that you invoked each team at least once before finishing. Typically, PaperResearchTeam is the first team, AuthoringTeam is the second one, VerificationTeam is the third one. When all teams are finished,"
+        " and respond with their results and status.  YOU MUST invoke each team at least once. CHECK that you invoked each team at least once before finishing. YOU MUST invoke PaperResearchTeam as the first team, AuthoringTeam as the second one, VerificationTeam as the third one. When all teams are finished,"
         " you must respond with FINISH.",
         ["PaperResearchTeam", "AuthoringTeam", "VerificationTeam"],
     )
