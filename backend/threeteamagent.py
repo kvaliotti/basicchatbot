@@ -158,7 +158,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
     
     log_agent_execution("System", "initializing", "Starting LinkedIn post writing agent")
     
-    llm = ChatOpenAI(model="gpt-4.1-mini", api_key=openai_api_key)
+    llm = ChatOpenAI(model="gpt-4.1-nano", api_key=openai_api_key)
     
     # Create tool instances
     tavily_search = TavilySearchResults(max_results=5, tavily_api_key=tavily_api_key) if tavily_api_key else None
