@@ -159,7 +159,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
     log_agent_execution("System", "initializing", "Starting LinkedIn post writing agent")
     
     llm = ChatOpenAI(model="gpt-4.1-mini", api_key=openai_api_key)
-    llm_supervisor = ChatOpenAI(model="gpt-4.1", api_key=openai_api_key)
+    llm_supervisor = ChatOpenAI(model="gpt-4.1-mini", api_key=openai_api_key)
     llm_research = ChatOpenAI(model="gpt-4.1-nano", api_key=openai_api_key)
     llm_verification = ChatOpenAI(model="gpt-4.1-nano", api_key=openai_api_key)
     
@@ -553,7 +553,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
         " AuthoringTeam writes and refines the LinkedIn post."
         " VerificationTeam fact-checks and ensures LinkedIn style compliance."
         " Respond with the team to act next. You can invoke any team more than once if you need to. Each team will perform their tasks"
-        " and respond with their results and status.  YOU MUST invoke each team at least once. CHECK that you invoked each team at least once before finishing. Make sure the LinkedIn post is the best we can do. Typically, PaperResearchTeam is the first team, AuthoringTeam is the second one, VerificationTeam is the third one. However, adjust as needed. When all teams are finished,"
+        " and respond with their results and status.  YOU MUST invoke each team at least once. CHECK that you invoked each team at least once before finishing. Typically, PaperResearchTeam is the first team, AuthoringTeam is the second one, VerificationTeam is the third one (AuthoringTeam may jump in after VerificaionTeam for fixes). When all teams are finished,"
         " you must respond with FINISH.",
         ["PaperResearchTeam", "AuthoringTeam", "VerificationTeam"],
     )
