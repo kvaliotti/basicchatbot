@@ -57,20 +57,36 @@ const LinkedInWriter: React.FC = () => {
     
     try {
       const response = await chatService.getWorkingDirectoryFiles(workingDirectory);
-      setDocuments(response.files);
       
-      // Fetch content for all documents
+      // Fetch content for all documents FIRST, then update both states together
       const contents: Record<string, string> = {};
+      const validDocuments: WorkingDirectoryFile[] = [];
+      
       for (const doc of response.files) {
         try {
           const contentResponse = await chatService.getFileContent(workingDirectory, doc.filename);
           contents[doc.filename] = contentResponse.content;
+          validDocuments.push(doc);
           console.log(`✅ Loaded content for ${doc.filename}: ${contentResponse.content.length} chars`);
         } catch (error) {
           console.error(`❌ Error fetching content for ${doc.filename}:`, error);
-          contents[doc.filename] = `❌ Error loading content: ${error instanceof Error ? error.message : 'Unknown error'}`;
+          // Retry once for potential timing issues
+          try {
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms
+            const retryResponse = await chatService.getFileContent(workingDirectory, doc.filename);
+            contents[doc.filename] = retryResponse.content;
+            validDocuments.push(doc);
+            console.log(`✅ Retry successful for ${doc.filename}: ${retryResponse.content.length} chars`);
+          } catch (retryError) {
+            console.error(`❌ Retry failed for ${doc.filename}:`, retryError);
+            contents[doc.filename] = `❌ Error loading content: ${retryError instanceof Error ? retryError.message : 'Unknown error'}`;
+            validDocuments.push(doc); // Still include it so user can see the error
+          }
         }
       }
+      
+      // Update both states atomically to prevent race condition
+      setDocuments(validDocuments);
       setDocumentContents(contents);
     } catch (error) {
       console.error('Error fetching documents:', error);
@@ -133,13 +149,18 @@ const LinkedInWriter: React.FC = () => {
         } catch (error) {
           console.error('Error polling documents:', error);
         }
-      }, 1000); // Poll documents every 1 second
+      }, 1000); // Poll documents every 1 second during execution
+    } else if (!isLoading && workingDirectory && documents.length === 0) {
+      // One final fetch after execution completes if no documents loaded yet
+      setTimeout(() => {
+        fetchDocuments();
+      }, 500);
     }
 
     return () => {
       if (pollInterval) clearInterval(pollInterval);
     };
-  }, [isLoading, workingDirectory, fetchDocuments]);
+  }, [isLoading, workingDirectory, fetchDocuments, documents.length]);
 
   const handleApiKeySubmit = (key: string) => {
     setApiKey(key);
@@ -441,7 +462,9 @@ const LinkedInWriter: React.FC = () => {
                                 <ReactMarkdown>{documentContents[doc.filename]}</ReactMarkdown>
                               </div>
                             ) : (
-                              <div className="text-gray-500 italic">Loading content...</div>
+                              <div className="text-gray-500 italic">
+                                {isLoading ? "Loading content..." : "⚠️ Content not available"}
+                              </div>
                             )}
                           </div>
                         </div>
@@ -569,7 +592,9 @@ const LinkedInWriter: React.FC = () => {
                                   <ReactMarkdown>{documentContents[doc.filename]}</ReactMarkdown>
                                 </div>
                               ) : (
-                                <div className="text-gray-500 text-sm italic">Loading content...</div>
+                                <div className="text-gray-500 text-sm italic">
+                                  {isLoading ? "Loading content..." : "⚠️ Content not available"}
+                                </div>
                               )}
                             </div>
                           </div>
