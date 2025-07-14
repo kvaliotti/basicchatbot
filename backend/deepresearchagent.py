@@ -39,7 +39,7 @@ def create_model(api_key: str) -> ChatOpenAI:
         raise ValueError("OpenAI API key is required and cannot be empty")
     
     return ChatOpenAI(
-        model="gpt-4.1-nano",
+        model="gpt-4.1",
         temperature=0.1,
         api_key=api_key,  # Use 'api_key' instead of 'openai_api_key'
     )
