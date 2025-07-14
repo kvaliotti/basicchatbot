@@ -164,7 +164,7 @@ def create_linkedin_agent(openai_api_key: str, tavily_api_key: Optional[str] = N
     llm_verification = ChatOpenAI(model="gpt-4.1", api_key=openai_api_key)
     
     # Create tool instances
-    tavily_search = TavilySearchResults(max_results=5, tavily_api_key=tavily_api_key) if tavily_api_key else None
+    tavily_search = TavilySearchResults(max_results=2, tavily_api_key=tavily_api_key) if tavily_api_key else None
     
     # Create PDF retrieval tool
     @tool
